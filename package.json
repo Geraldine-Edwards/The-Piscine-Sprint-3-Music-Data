@@ -1,0 +1,13 @@
+{
+  "name": "the-piscine-sprint-3-music-data",
+  "version": "1.0.0",
+  "description": "Music data analysis and frontend project",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["music", "data", "analysis", "frontend", "javascript"],
+  "author": "Geraldine-Edwards",
+  "license": "MIT"
+}
