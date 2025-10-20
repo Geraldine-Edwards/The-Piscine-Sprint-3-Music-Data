@@ -2,9 +2,6 @@ import { getUserIDs } from './data.mjs';
 
 
 export function createUserDropdown () {
-    // get the user Ids array
-    const userIds = getUserIDs();
-
     // create the dropdown elements
     const userSelection = document.getElementById("userSelect");
 
@@ -13,6 +10,10 @@ export function createUserDropdown () {
     defaultOption.text = "--Please select a user--";
     userSelect.appendChild(defaultOption);
     
+
+    // get the user Ids array
+    const userIds = getUserIDs();
+
     // iterate through each user ID and create an option element for it
     userIds.forEach((userId) => {
         const userOption = document.createElement("option");
@@ -22,4 +23,3 @@ export function createUserDropdown () {
     });
 }
 
-createUserDropdown()
