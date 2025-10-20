@@ -28,7 +28,8 @@ export function userSongListensData(userID) {
     
     // if there is no data after the sort display a user message
     if (sortedSongCount.length === 0) {
-        displayDiv.innerHTML = `<p>User ${userID} has not listened to any songs yet.</p>`
+        songDiv.innerHTML = `<p>User ${userID} has not listened to any songs yet.</p>`
+        return;
     }
 
     // get the most listened song at index [0] then get the song ID [0] from that entry
@@ -69,7 +70,7 @@ export function userMostListenedArtist(userID) {
     
     // if there is no data after the sort display a user message
     if (sortedArtistCount.length === 0) {
-        displayDiv.innerHTML = `<p>User ${userID} has not listened to any artists yet.</p>`;
+        artistDiv.innerHTML = `<p>User ${userID} has not listened to any artists yet.</p>`;
         return;
     }
 
