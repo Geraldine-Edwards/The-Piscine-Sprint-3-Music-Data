@@ -15,10 +15,10 @@ export function createUserDropdown () {
     const userIds = getUserIDs();
 
     // iterate through each user ID and create an option element for it
-    userIds.forEach((userId) => {
+    userIds.forEach((userID) => {
         const userOption = document.createElement("option");
-        userOption.value = userId;
-        userOption.text = `User ${userId}`;
+        userOption.value = userID;
+        userOption.text = `User ${userID}`;
         userSelect.appendChild(userOption);
     });
 }
