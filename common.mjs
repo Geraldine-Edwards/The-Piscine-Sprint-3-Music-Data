@@ -1,6 +1,6 @@
 import { getUserIDs } from "./data.mjs";
 import { createUserDropdown, setupUserDropdown } from "./user-dropdown.mjs"
-import { userSongListensData, userMostListenedArtist } from "./user-song-data.mjs";
+import { renderAllResults } from "./user-song-data.mjs";
 
 // export const countUsers = () => getUserIDs().length;
 
@@ -9,8 +9,7 @@ window.onload = function () {
   createUserDropdown();
 
    setupUserDropdown(function(userID) {
-    userSongListensData(userID);
-    userMostListenedArtist(userID);
+  renderAllResults(userID)
   });
 
 };
