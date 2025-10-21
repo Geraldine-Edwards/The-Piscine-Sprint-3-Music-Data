@@ -81,7 +81,7 @@ function buildResultsTable(results) {
   return `
     <table style="border-collapse: collapse; width: 100%; margin: 1em 0;">
       <caption style="caption-side: top; font-weight: bold; text-align: left; margin-bottom: 0.5em;">
-        User Music Data Results
+        User's Music Data Results
       </caption>
       <thead>
         <tr>
