@@ -1,6 +1,6 @@
-import { getListenEvents, getUserIDs, getSong } from "./data.mjs";
+import { getListenEvents, getSong } from "./data.mjs";
 
-// helper function to get all listen events for a user
+// helper function to get all listen events for a user from the imported function
 function getUserListenEvents(userID) {
     return getListenEvents(userID);
 }
@@ -29,6 +29,8 @@ function getMostListened(counts) {
 //helper function to render the data response message in a results div
 function renderResult(resultDivId, message) {
     const displayDiv = document.getElementById("displayData");
+    // clear previous results
+    displayDiv.innerHTML = "";
     let resultDiv = document.getElementById("resultDivId");
     //if there is no div, create one
     if (!resultDiv) {
@@ -40,7 +42,7 @@ function renderResult(resultDivId, message) {
 }
 
 
-
+// use an array for all the questions that the rubric wants answered where the answers are generated form their own functions
 const questionsAndAnswerFns = [
     ["What was the user's most often listened to song",
     getMostOftenSongTitle
@@ -74,18 +76,6 @@ const questionsAndAnswerFns = [
     // ]
 ]
 
-export function renderAllResults(userID){
-    const results = []
-    for (const [question, answerFn] of questionsAndAnswerFns) {
-      const answer = answerFn(userID);
-      results.push([question, answer])
-    }
-    const message = buildResultsTable(results);
-    renderResult("allResults", message);
-}
-
-
-
 // helper function to build the table results
 function buildResultsTable(results) {
   return `
@@ -111,7 +101,25 @@ function buildResultsTable(results) {
   `;
 }
 
+// push the answers from the the functions to a results array and render the table
+export function renderAllResults(userID){
+    const results = []
+    for (const [question, answerFn] of questionsAndAnswerFns) {
+      const answer = answerFn(userID);
+      if(answer) {
+      results.push([question, answer])
+      }
+    }
+    if (results.length > 0){
+    const table = buildResultsTable(results);
+    renderResult("allResults", table);
+    } else {
+      renderResult("allResults", "<p>This user hasn't listened to any songs yet.</p>")
+    }
+}
 
+
+// function to get the data for the most listened to song title
 export function getMostOftenSongTitle(userID) {
     // get all the events via the helper function 
     const events  = getUserListenEvents(userID)
@@ -125,7 +133,8 @@ export function getMostOftenSongTitle(userID) {
     // identify the song with the highest listen count and render in the browser
     const mostListenedSong = getSong(mostListenedSongID);
  
-   return mostListenedSong ? mostListenedSong.title : "";
+    // return the song title or leave the question empty
+    return mostListenedSong ? mostListenedSong.title : "";
 };
 
 
