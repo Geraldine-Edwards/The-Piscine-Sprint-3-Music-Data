@@ -1,15 +1,15 @@
-import { getUserIDs } from "./data.mjs";
-import { createUserDropdown, setupUserDropdown } from "./user-dropdown.mjs";
-import { userSongListensData } from "./user-song-data.mjs";
 
+import { createUserDropdown, setupUserDropdown } from "./user-dropdown.mjs"
+import { renderAllResults } from "./user-song-data.mjs";
 
-export const countUsers = () => getUserIDs().length;
+// export const countUsers = () => getUserIDs().length;
 
 window.onload = function () {
-  // call the dropdown functions 
+  // call the dropdown function  
   createUserDropdown();
-  setupUserDropdown(userSongListensData)
 
-  
+   setupUserDropdown(function(userID) {
+  renderAllResults(userID)
+  });
 
 };

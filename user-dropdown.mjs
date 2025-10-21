@@ -3,7 +3,7 @@ import { getUserIDs } from './data.mjs';
 
 export function createUserDropdown () {
     // create the dropdown elements
-    const userSelect = document.getElementById("userSelect");
+    const userSelection = document.getElementById("userSelect");
 
     const defaultOption = document.createElement("option");
     defaultOption.value = ""
@@ -24,13 +24,11 @@ export function createUserDropdown () {
 }
 
 // add a change event listener to the user dropdown.
-// when a user is selected (by mouse or keyboard), calls the provided callback function (whichever ones we need) with the selected user ID.
-export function setupUserDropdown(callback) {
+// when a user is selected (by mouse or keyboard), calls the provided function with the selected user ID.
+export function setupUserDropdown(onUserChange) {
   const userSelect = document.getElementById("userSelect");
   userSelect.addEventListener("change", (event) => {
-    const selectedUserID = event.target.value;
-    if (selectedUserID) {
-      callback(selectedUserID);
-    }
+    const userID = event.target.value;
+      onUserChange(userID);
   });
 }
