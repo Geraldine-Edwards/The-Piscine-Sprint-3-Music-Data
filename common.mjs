@@ -1,6 +1,6 @@
 
 import { createUserDropdown, setupUserDropdown } from "./user-dropdown.mjs"
-import { renderAllResults } from "./user-song-data.mjs";
+import { renderAllResults } from "./src/utils/renderers.mjs";
 import { getUserIDs } from "./data.mjs";
 
 export const countUsers = () => getUserIDs().length;
