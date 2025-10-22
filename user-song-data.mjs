@@ -27,10 +27,10 @@ export function questionsAndAnswerFns() {
     "What was the user's most often listened to song by listening time (not number of listens)",
     getMostListenedSongByTime
     ],
-    // [
-    // "What was the user's most often listened to Artist by listening time (not number of listens)",
-    // getMostListenedMinutesArtist
-    // ],
+    [
+    "What was the user's most often listened to Artist by listening time (not number of listens)",
+    getMostListenedArtistByTime
+    ],
     // ["What song did the user listen to the most times in a row (i.e. without any other song being listened to in between)?",
     // getMostConsecutiveSong
     // ],
@@ -143,7 +143,7 @@ export function getMostOftenSongFriday(userID) {
 /**
  * Retrieves the song that a user has listened to for the longest total time.
  *
- * @param {string} userID - the ID of the user whose listening history is being analyzed.
+ * @param {string} userID - the ID of the user
  * @returns {string} - a formatted string of the artist and song title (e.g., "Artist - Title"),
  *                     or an empty string ("") if teh user has no listening data.
  *
@@ -160,7 +160,7 @@ export function getMostListenedSongByTime(userID) {
     events,
     event => event.song_id,
     event => {
-      //get the song’s duration using the song id from the event data
+      // get the song’s duration using the song id from the event data
       const song = getSong(event.song_id);
     return song ? song.duration_seconds : 0
     });
@@ -177,9 +177,25 @@ export function getMostListenedSongByTime(userID) {
  * Retrieves the artist that a user has listened to for the longest total time.
  *
  * @param {string} userID - the ID of the user.
- * @returns {string} - the name of the most listened to artist by total listening time (in minutes),
+ * @returns {string} - the name of the most listened to artist by total listening time (in seconds),
  *                     or an empty string ("") if no data is available.
  *
- * This function sums the total listening time (in seconds) of each artist based on the user's
- * listening history, and returns the artist with the highest total listening time.
+ * This function sums the total listening time (in seconds, looked up from the song data)
+ * for each artist in the user's listening history, and returns the artist with the highest total duration.
+ * It uses `getMostBy` to group by artist and sum the durations.
  */
+export function getMostListenedArtistByTime(userID) {
+  const events = getUserListenEvents(userID);
+  if (!events.length) return "";
+
+  // use getMostBy to group events by artist and sum total listening time for each artist
+  const mostListenedArtist = getMostBy(
+    events,
+    event => {
+      // look up the artist using the song_id from teh event
+      const song = getSong(event.song_id);
+      return song ? song.artist : "";
+    }
+  );
+  return mostListenedArtist ? mostListenedArtist : "";
+}
