@@ -139,6 +139,7 @@ export function getMostOftenSongFriday(userID) {
   return mostListenedSongFriday  ? `${mostListenedSongFriday .artist} - ${mostListenedSongFriday.title}` : "";
 }
 
+
 /**
  * Retrieves the song that a user has listened to for the longest total time.
  *
@@ -146,21 +147,23 @@ export function getMostOftenSongFriday(userID) {
  * @returns {string} - a formatted string of the artist and song title (e.g., "Artist - Title"),
  *                     or an empty string ("") if teh user has no listening data.
  *
- * This function sums the total listening time (duration in seconds) for each song
- * in the user's listening history and returns the song with the highest total duration.
+ * This function sums the total listening time (duration in seconds, looked up from the song data) for each song
+ * for each song in the user's listening history and returns the song with the highest total duration.
  * It uses `getMostBy` to group by song ID and sum the durations.
  */
 export function getMostListenedSongByTime(userID) {
-console.log("getMostListenedSongByTime called for user:", userID);
   const events = getUserListenEvents(userID);
   if (!events.length) return "";
 
-  // use getMostBy to group by song_id and sum by duration_seconds
+  // use getMostBy to group events by song_id and sum of total listening time for each song
   const mostListenedSongID = getMostBy(
     events,
     event => event.song_id,
-    event => Number(event.duration_seconds) || 0
-  );
+    event => {
+      //get the song’s duration using the song id from the event data
+      const song = getSong(event.song_id);
+    return song ? song.duration_seconds : 0
+    });
 
   // retrieve the song details using song ID and duration
   const getMostListenedSongByTime = getSong(mostListenedSongID);
@@ -168,3 +171,15 @@ console.log("getMostListenedSongByTime called for user:", userID);
   return getMostListenedSongByTime ? `${getMostListenedSongByTime.artist} - ${getMostListenedSongByTime.title}` : "";
 
 };
+
+
+/**
+ * Retrieves the artist that a user has listened to for the longest total time.
+ *
+ * @param {string} userID - the ID of the user.
+ * @returns {string} - the name of the most listened to artist by total listening time (in minutes),
+ *                     or an empty string ("") if no data is available.
+ *
+ * This function sums the total listening time (in seconds) of each artist based on the user's
+ * listening history, and returns the artist with the highest total listening time.
+ */
