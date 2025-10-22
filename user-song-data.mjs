@@ -31,12 +31,13 @@ export function questionsAndAnswerFns() {
     "What was the user's most often listened to Artist by listening time (not number of listens)",
     getMostListenedArtistByTime
     ],
-    // ["What song did the user listen to the most times in a row (i.e. without any other song being listened to in between)?",
-    // getMostConsecutiveSong
-    // ],
-    // ["How many times was most consecutive song listened to?",
-    // getMostConsecutiveSongTimes   
-    // ],
+    [
+    "What was the user's most often listened to song on Friday nights (between 5pm and 4am) by listening time (not number of listens)",
+    getMostListenedSongFridayByTime
+    ],
+    ["What song did the user listen to the most times in a row (i.e. without any other song being listened to in between) and many times was the song listened to?",
+    getMostConsecutivelyPlayedSong
+    ],
     // ["Are there any songs that, on each day the user listened to music, they listened to every day? Which ones(s)",
     // songListenedEveryDay
     // ],
@@ -162,7 +163,9 @@ export function getMostListenedSongByTime(userID) {
     event => {
       // get the song’s duration using the song id from the event data
       const song = getSong(event.song_id);
-    return song ? song.duration_seconds : 0
+      if (song) {
+        return song ? song.duration_seconds : 0
+      }
     });
 
   // retrieve the song details using song ID and duration
@@ -194,8 +197,147 @@ export function getMostListenedArtistByTime(userID) {
     event => {
       // look up the artist using the song_id from teh event
       const song = getSong(event.song_id);
-      return song ? song.artist : "";
+      if (song) {
+        return song ? song.artist : "";
+      }
     }
   );
   return mostListenedArtist ? mostListenedArtist : "";
+}
+
+
+/**
+ * Retrieves the song that a user has listened to for the longest total time on Friday nights (5pm–4am).
+ *
+ * @param {string} userID - the ID of the user.
+ * @returns {string} - a formatted string of the artist and song title (e.g., "Artist - Title"),
+ *                     or an empty string if no data is available.
+ *
+ * This function filters the user's listening events to only those on Friday nights (Friday 5pm to Saturday 4am),
+ * then sums the total listening time (duration in seconds, looked up from the song data) for each song,
+ * and returns the song with the highest total duration in that window.
+ */
+export function getMostListenedSongFridayByTime(userID){
+    const events = getUserListenEvents(userID);
+    if (!events.length) return "";
+
+    // check for the 'Friday night' window
+    const filteredEvents = events.filter(event  => {
+
+      // get the timestamp data for an event
+      const date = new Date(event.timestamp);
+
+      // get the day from the date using getDay() method
+      const day = date.getDay();
+
+      // convert the timestamp to seconds (for total accuracy )
+      const seconds = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+
+      // total seconds for Friday 5pm - Midnight = 61200 + 0 + 0 = 61200 seconds.
+      if (day === 5 && seconds >= 61200) return true;
+
+      // total seconds for Midnight to Saturday 4am = 14400 + 0 + 0 = 14400 seconds
+      if (day === 6 && seconds < 14400) return true
+
+      return false
+    });
+
+  // use getMostBy to group by song_id and sum total listening time for each song
+  const mostListenedSongID = getMostBy(
+    filteredEvents,
+    event => event.song_id,
+    event => {
+      // Look up the song's duration using the song_id from the event
+      const song = getSong(event.song_id);
+      return song ? song.duration_seconds : 0;
+    }
+  );
+
+  // retrieve the song details for the most listened song by duration on Friday night
+  const song = getSong(mostListenedSongID);
+  if (song) {
+    return song ? `${song.artist} - ${song.title}` : "";
+  }
+}
+
+
+/**
+ * Retrieves the song that the user listened to the most times in a row (consecutively),
+ * without any other song being played in between, and how many times it was played.
+ *
+ * @param {string} userID - the ID of the user
+ * @returns {string} - a formatted string of the artist and song title and times played 
+ *                      (e.g., "Artist - Title (5 times)"), or an empty string ("") if the user has no listening data.
+ *
+ * This function analyzes the user's listening events in order and finds the song
+ * with the longest consecutive repeat streak (with no other songs in between). 
+ * It returns the song with the highest number of consecutive plays.
+ */
+export function getMostConsecutivelyPlayedSong(userID) {
+    const events = getUserListenEvents(userID);
+    if (!events.length) return "";
+
+    // track the ID of the song currently in the streak
+    let currentSongID = events[0].song_id;
+
+    // set the variable to 1 because a song is always played at least once
+    let currentStreak = 1;
+
+    // set an object to track the longest streak for each song
+    const streaks = {};
+
+    //loop through the events
+    for (let i = 1; i < events.length; i++) {
+      // get teh song ID played in this event
+      const songID = events[i].song_id;
+
+      // if the song is the same then the streak continues and the length increases 
+      if (songID === currentSongID) {
+        currentStreak++;
+      } else {
+
+        // if the streak has ended (a new song occurred),start a new streak with the new id
+        currentSongID = songID;
+        // reset the streak length to 1 again as earlier
+        currentStreak = 1
+      }
+
+    // compare the existing longest streak for current song in the streaks object,
+    // with the current streak just counted and keep the highest one (max)
+    streaks[currentSongID] = Math.max(streaks[currentSongID] || 0, currentStreak);
+  }
+
+// determine which song(s) have the overall longest streak
+// highest streak length found
+let longestStreak = 0;
+
+// array to hold all songs with that streak
+let longestSongs = [];
+
+// find the songs with the overall longest streak
+for (const songID in streaks) {
+  if (streaks[songID] > longestStreak) {
+    // if a new highest streak is found reset the array
+    longestStreak = streaks[songID];
+    longestSongs = [songID]; // 
+  } else if (streaks[songID] === longestStreak) {
+    // add to the array
+    longestSongs.push(songID); 
+  }
+}
+
+// create an empty array for the streak results
+let resultArray = [];
+// loop through each id in longestSongs array
+for (const id of longestSongs) {
+  // retrieve the song details for the song id
+  const song = getSong(id);
+  if (song) { 
+    resultArray.push(`${song.artist} - ${song.title} (${longestStreak} times)`);
+  }
+}
+
+const result = resultArray.join(", ");
+
+return result;
 }

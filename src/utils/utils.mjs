@@ -57,7 +57,7 @@ export function countBy(events, getKey, getValue = () => 1) {
  * This is used for identifying the most listened-to song or artist.
  */
 export function getMostListened(counts) {
-    let topResult= null; 
+    let topResult = null; 
     // start highestCount with - infinity, the smallest number possible (setting to 0 may cause logic to break)
     let highestCount = -Infinity;
 
