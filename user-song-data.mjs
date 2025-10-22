@@ -1,13 +1,14 @@
 import { getListenEvents, getSong } from "./data.mjs";
 
 // helper function to get all listen events for a user from the imported function
-function getUserListenEvents(userID) {
+export function getUserListenEvents(userID) {
     //returns an array of listen event objects (or an empty array) for that specific user ID
     return getListenEvents(userID) || [];
 }
 
+
 // helper function to count how many times each song Id or artist appears in the events array
-function countBy(events, getKey) {
+export function countBy(events, getKey) {
     //set an empty object container
     const count = {}; 
     // loop over each event in events
@@ -22,7 +23,7 @@ function countBy(events, getKey) {
 
 
 // helper function to get the key with the highest count (like a song ID or artist)
-function getMostListened(counts) {
+export function getMostListened(counts) {
     let topResult= null; 
     // start highestCount with - infinity, the smallest number possible (setting to 0 may cause logic to break)
     let highestCount = -Infinity;
@@ -40,7 +41,8 @@ function getMostListened(counts) {
   return topResult;
 }
 
-//helper function to render the data response message in a results div
+
+// helper function to render the data response message in a results div
 function renderResult(resultDivId, message) {
     const displayDiv = document.getElementById("displayData");
     // clear previous results
