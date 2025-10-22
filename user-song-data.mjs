@@ -2,28 +2,42 @@ import { getListenEvents, getSong } from "./data.mjs";
 
 // helper function to get all listen events for a user from the imported function
 function getUserListenEvents(userID) {
-    return getListenEvents(userID);
+    //returns an array of listen event objects (or an empty array) for that specific user ID
+    return getListenEvents(userID) || [];
 }
 
-// helper function to count how many times each value appears in the events array (using the reduce() method),
+// helper function to count how many times each song Id or artist appears in the events array
 function countBy(events, getKey) {
-    // use a function to get the key (like song ID or artist name),
-    return events.reduce((count, event) => {
+    //set an empty object container
+    const count = {}; 
+    // loop over each event in events
+    for (const event of events) {
+        // get the key (e.g., song ID or artist) from the event 
         const key = getKey(event);
         // if the key has been counted before, add 1; if not, start from zero and add 1
-        count[key] = (count[key] || 0) + 1;
-        return count;
-    }, {});
+        count[key] = (count[key] || 0) + 1;  
+    }
+    return count;
 }
 
-// helper function to get the key with the highest count (like a song ID or artist name)
-function getMostListened(counts) {
-    // Object.entries(counts) returns an array of [0] the song ID and [1] the song count, in an array itself
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]); // highest to lowest
 
-    // get the key from the first entry in the sorted array (the one with the highest count)
-    // if sorted is empty it returns null to avoid causing an error
-    return sorted.length >0 ? sorted[0][0]:null;
+// helper function to get the key with the highest count (like a song ID or artist)
+function getMostListened(counts) {
+    let topResult= null; 
+    // start highestCount with - infinity, the smallest number possible (setting to 0 may cause logic to break)
+    let highestCount = -Infinity;
+
+    // loop over each key in counts
+    for (const key in counts) {
+      // if the count for the current key is greater than highestCount
+      if (counts[key] > highestCount) {
+        //update both highestCount and topResult 
+        highestCount = counts[key];
+        topResult = key;
+      }
+    }
+
+  return topResult;
 }
 
 //helper function to render the data response message in a results div
@@ -104,16 +118,20 @@ function buildResultsTable(results) {
 // push the answers from the the functions to a results array and render the table
 export function renderAllResults(userID){
     const results = []
+    // loop through every question and answer function
     for (const [question, answerFn] of questionsAndAnswerFns) {
       const answer = answerFn(userID);
+      // keep only non-empty answers and push into a results array
       if(answer) {
       results.push([question, answer])
       }
     }
+    // if there are answers build and render the table
     if (results.length > 0){
     const table = buildResultsTable(results);
     renderResult("allResults", table);
     } else {
+      // if the user has no data (results empty), render a short message instead.
       renderResult("allResults", "<p>This user hasn't listened to any songs yet.</p>")
     }
 }
@@ -127,22 +145,27 @@ export function getMostOftenSongTitle(userID) {
     // use the helper function to count all the listen events per song id
     const songCounts = countBy(events, event => event.song_id);
 
-    // use the helper function to sort the song counts - highest to lowest  
+    // use the helper function to get the highest song id count
     const mostListenedSongID = getMostListened(songCounts); 
 
     // identify the song with the highest listen count and render in the browser
     const mostListenedSong = getSong(mostListenedSongID);
  
-    // return the song title or leave the question empty
-    return mostListenedSong ? mostListenedSong.title : "";
+    // return the artist and song title or an empty string if there isn't one
+    return mostListenedSong ? `${mostListenedSong.artist} - ${mostListenedSong.title}` : "";
 };
 
 
 export function getMostOftenArtist(userID) { 
+    // get the events via helper function
     const events = getUserListenEvents(userID)
+
+    // count how many times each artist appears by mapping each event -> song -> artist
     const artistCounts = countBy(events, event => getSong(event.song_id).artist)
 
+    // find the artist with the highest listen count
     const mostListenedArtist = getMostListened(artistCounts); 
   
+    // return the artist name, or an empty string if there isn't one
     return mostListenedArtist ? mostListenedArtist: "";
 };
