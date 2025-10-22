@@ -1,5 +1,5 @@
 import { getSong } from "./data.mjs";
-import { getUserListenEvents, countBy, getMostListened, } from "./src/utils/utils.mjs";
+import { getUserListenEvents, getMostBy, } from "./src/utils/utils.mjs";
 
 
 
@@ -60,14 +60,12 @@ export function questionsAndAnswerFns() {
 export function getMostOftenSongTitle(userID) {
     // get all listen events for the user by calling the helper function
     const events = getUserListenEvents(userID);
+    if (!events.length) return "";
 
-    // use 'countBy' to count the occurrences of each song_id in the events
-    const songCounts = countBy(events, event => event.song_id);
+    // get the song ID with the highest listen count 
+    const mostListenedSongID = getMostBy(events, event => event.song_id);
 
-    // get the song ID with the highest listen count using the 'getMostListened'
-    const mostListenedSongID = getMostListened(songCounts);
-
-    // retrieve the song details (artist and title) for the song with the highest listen count
+    // retrieve the song details (artist and title) for song ID
     const mostListenedSong = getSong(mostListenedSongID);
 
     // return the formatted string with artist and title, or an empty string if no song was found
@@ -86,12 +84,10 @@ export function getMostOftenSongTitle(userID) {
  */
 export function getMostOftenArtist(userID) { 
     const events = getUserListenEvents(userID)
+    if (!events.length) return "";
 
-    // count how many times each artist appears by mapping each event with song and artist
-    const artistCounts = countBy(events, event => getSong(event.song_id).artist)
-
-    // find the artist with the highest listen count
-    const mostListenedArtist = getMostListened(artistCounts); 
+    // get the artist  with the highest listen count
+    const mostListenedArtist = getMostBy(events, event => getSong(event.song_id).artist)
   
     return mostListenedArtist ? mostListenedArtist: "";
 };
@@ -111,38 +107,56 @@ export function getMostOftenArtist(userID) {
  */
 export function getMostOftenSongFriday(userID) {
   const events = getUserListenEvents(userID);
+  if (!events.length) return "";
 
   // check for the 'friday night' window
-  const checkFridayNight = event => {
+  const filteredEvents = events.filter(event  => {
 
     // get the timestamp data for an event
-    const fullDate = new Date(event.timestamp);
+    const date = new Date(event.timestamp);
 
     // get the day from the date using getDay() method
-    const day = fullDate.getDay();
+    const day = date.getDay();
 
     // convert the timestamp to seconds (for total accuracy )
-    // e.g. total seconds at 5:00pm PM = 61200 + 0 + 0 = 61200 seconds.
-    const seconds = fullDate.getHours() * 3600 + fullDate.getMinutes() * 60 + fullDate.getSeconds();
+    const seconds = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
 
-    // check if the timestamp falls between Friday 'night' or Saturday 'early morning' (returns a boolean)
-    return (day === 5 && seconds >= 17 * 3600) || (day === 6 && seconds < 4 * 3600);
-  }
+    // total seconds for Friday 5pm - Midnight = 61200 + 0 + 0 = 61200 seconds.
+    if (day === 5 && seconds >= 61200) return true;
 
-  // filter the events with the checkFridayNight values
-  const fridayEvents = events.filter(checkFridayNight);
+    // total seconds for Midnight to Saturday 4am = 14400 + 0 + 0 = 14400 seconds
+    if (day === 6 && seconds < 14400) return true
 
-  // return an empty string if no Friday events
-  if (fridayEvents.length === 0) return "";
+    return false
+  });
 
-  // get the count in the fridayEvents array
-  const songCounts = countBy(fridayEvents, event => event.song_id);
+    // get the song ID with the highest listen count 
+    const mostListenedSongFridayID = getMostBy(filteredEvents, event => event.song_id);
 
-  // get the song with the highest listen count
-  const topSongId = getMostListened(songCounts);
+    // retrieve the song details (artist and title) for song ID
+    const mostListenedSongFriday = getSong(mostListenedSongFridayID);
 
-  // get the song details from the song ID
-  const song = getSong(topSongId);
-
-  return song ? `${song.artist} - ${song.title}` : "";
+  return mostListenedSongFriday  ? `${mostListenedSongFriday .artist} - ${mostListenedSongFriday.title}` : "";
 }
+
+
+// export function getMostListenedMinutesSong(userID) {
+
+//   const events = getUserListenEvents();
+//   if (!events.length) return "";
+
+//   // set an object to store total listen time for each song id
+//   const songTimesCounts = {};
+
+//   // This sums the total listening time for each song by mapping each event with song ID and duration.
+//   const songTimeCounts = countBy(events, event => event.song_id, event => event.duration);
+
+//   const topSongId = getMostListened(songTimeCounts)
+
+//   // Get the song details
+//   const song = getSong(topSongId);
+
+//   // Format the result
+//   return song ? `${song.artist} - ${song.title}` : "";
+
+// }

@@ -15,23 +15,34 @@ export function getUserListenEvents(userID) {
 
 
 /**
- * Counts the number of occurrences of items in an array, grouped by a key.
+ * Counts the number of occurrences of items in an array, grouped by a key (artist or song ID).
  *
  * @param {Array<Object>} events - an array of items to count (e.g. listen events).
- * @param {(item: Object) => string} getKey - a function that returns the key to group by (e.g. song ID or artist).
- * @returns {Object} - an object where keys are returned by `getKey`, and values are teh count of their occurrences.
+ * @param {(item: Object) => string} getKey - a function that returns the key to group by (e.g., song ID or artist).
+ * @param {(item: Object) => number} [getValue=() => 1] - a function that returns the value to sum for each key (e.g., duration). 
+ *  - defaults to `1` for simple counting. 
+ * @returns {Object} - an object where keys are returned by `getKey`, and values are the sum counts or values
  *
- * Example output: { a: 3, b: 2, c: 1 }
+ * Example:
+ * Input: [{ song: 'a' }, { song: 'b' }, { song: 'a' }]
+ * getKey: event => event.song
+ * Output: { a: 2, b: 1 }
  */
-export function countBy(events, getKey) {
+export function countBy(events, getKey, getValue = () => 1) {
     // set an empty object container
     const count = {}; 
     // loop over each event in events
     for (const event of events) {
-        // get the key (e.g., song ID or artist) from the event 
+
+        // get the key (e.g. song ID or artist) from the event 
         const key = getKey(event);
-        // if the key has been counted before, add 1; if not, start from zero and add 1
-        count[key] = (count[key] || 0) + 1;  
+
+        // get the listen value (duration or 1 for count)
+        const value = getValue(event);
+
+        // if the key (song or artist) has been counted before, add the value to it
+        //  if not, start with the value
+        count[key] = (count[key] || 0) + value;  
     }
     return count;
 }
@@ -61,4 +72,19 @@ export function getMostListened(counts) {
     }
 
   return topResult;
+}
+
+/**
+ * Finds the key (e.g., song ID, artist) with the highest count or total value.
+ *
+ * @param {Array<Object>} events - An array of events to analyze.
+ * @param {(item: Object) => string} getKey - Function to extract the key (e.g., song ID).
+ * @param {(item: Object) => number} [getValue=() => 1] - Function to extract the value to sum (e.g., duration). Defaults to 1 for counting.
+ * @returns {string|null} - The key with the highest value, or null if none found.
+ */
+export function getMostBy(events, getKey, getValue = () => 1) {
+
+  // return the highest value (either a duration or count)
+  const counts = countBy(events, getKey, getValue);
+  return getMostListened(counts);
 }
