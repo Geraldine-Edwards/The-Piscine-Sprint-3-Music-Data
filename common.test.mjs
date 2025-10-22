@@ -1,7 +1,8 @@
 import assert from "node:assert";
 import test from "node:test";
 import { countUsers } from "./common.mjs";
-import { getMostOftenArtist, getMostOftenSongTitle, countBy } from "./user-song-data.mjs";
+import { countBy } from "./src/utils/utils.mjs";
+import { getMostOftenArtist, getMostOftenSongTitle } from "./user-song-data.mjs";
 
 
 // assert.equal - "loose" comparisons
