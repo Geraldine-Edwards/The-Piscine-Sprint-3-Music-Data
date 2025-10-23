@@ -38,9 +38,9 @@ export function questionsAndAnswerFns() {
     ["What song did the user listen to the most times in a row (i.e. without any other song being listened to in between) and many times was the song listened to?",
     getMostConsecutivelyPlayedSong
     ],
-    // ["Are there any songs that, on each day the user listened to music, they listened to every day? Which ones(s)",
-    // songListenedEveryDay
-    // ],
+    ["Are there any songs that, on each day the user listened to music, they listened to every day? Which ones(s)",
+    songListenedEveryDay
+    ],
     // ["What were the user's top three genres to listen to by number of listens?",
     // userTopThreeGenres
     // ]
@@ -195,7 +195,7 @@ export function getMostListenedArtistByTime(userID) {
   const mostListenedArtist = getMostBy(
     events,
     event => {
-      // look up the artist using the song_id from teh event
+      // retrieve the artist using the song_id from teh event
       const song = getSong(event.song_id);
       if (song) {
         return song ? song.artist : "";
@@ -341,3 +341,89 @@ const result = resultArray.join(", ");
 
 return result;
 }
+
+
+/**
+ * Identifies songs that the user listened to on **every day** they were active.
+ *
+ * @param {string} userID - The ID of the user whose listening history is analyzed.
+ * @returns {string} - A comma-separated string of songs (formatted as "Artist - Title"),
+ *                     or an empty string ("") if no songs were listened to every day.
+ *
+ * This function analyzes the user's listening events to determine whether any songs
+ * were played at least once **on every distinct day** the user listened to music.
+ */
+export function songListenedEveryDay(userID){
+  const events = getUserListenEvents(userID);
+  if (!events.length) return "";
+
+  // group events by day
+  const days = {}
+
+  // loop through all events
+  for (const event of events) {
+    // extract the date  e.g YYYY-MM-DD
+    const date = new Date(event.timestamp);
+
+    // format the dayKey from date
+    const dayKey = date.getFullYear() + "-" +
+      String(date.getMonth() + 1).padStart(2, "0") + "-" +
+      String(date.getDate()).padStart(2, "0");
+
+    // if no dayKeys get a new Set if this is the first time the day appears
+    if (!days[dayKey]) {
+      // use new Set() so no matter how many times a song appears on a day, the set keeps only one entry for that id
+      days[dayKey] = new Set();
+    }
+
+    // key is the date and value is a Set of song events for that day
+    days[dayKey].add(event.song_id);
+  }
+
+  // create an array of ALL days
+  const dayKeys = [];
+  for (const day in days) {
+    dayKeys.push(day);
+  }
+
+  //return empty if no days
+  if (dayKeys.length === 0) return "";
+
+  // create a set by taking the first day in the list of days and get all the songs listened to that day.
+  let songsEveryDay = new Set(days[dayKeys[0]]);
+
+  // for each following day
+  for (let i = 1; i < dayKeys.length; i++) {
+    // get the songs played on the current day
+    const daySongs = days[dayKeys[i]];
+    // newSongSet contains the songs that are common to songsEveryDay and current day
+    const newSongSet = new Set();
+
+  // check each song currently being tracked as 'played every day'
+  for (const songID of songsEveryDay) {
+    // if the current day also has that song, add it to newSongSet
+    if (daySongs.has(songID)) {
+      newSongSet.add(songID);
+    }
+  }
+
+  // at the end, songsEveryDay contains only the songs that were played on every single day
+  songsEveryDay = newSongSet;
+
+    // if no songs appear every day, return empty
+    if (songsEveryDay.size === 0) return "";
+  }
+
+  // retreive the song details for the id 
+  const resultArray = [];
+  for (const songID of songsEveryDay) {
+    const song = getSong(songID);
+    if (song) {
+      resultArray.push(`${song.artist} - ${song.title}`);
+    }
+  }
+
+  // join all songs into a single string
+  return resultArray.join(", ");
+  
+};
