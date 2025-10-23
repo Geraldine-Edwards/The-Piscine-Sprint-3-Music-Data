@@ -2,7 +2,17 @@ import assert from "node:assert";
 import test from "node:test";
 import { countUsers } from "./common.mjs";
 import { countBy } from "./src/utils/utils.mjs";
-import { getMostOftenArtist, getMostOftenSongTitle } from "./user-song-data.mjs";
+import { 
+  getMostOftenSongTitle,
+  getMostOftenArtist,
+  getMostOftenSongFriday,
+  getMostListenedSongByTime,
+  getMostListenedArtistByTime,
+  getMostListenedSongFridayByTime,
+  getMostConsecutivelyPlayedSong,
+  songListenedEveryDay,
+  userTopThreeGenres
+ } from "./user-song-data.mjs";
 
 
 // assert.equal - "loose" comparisons
@@ -44,4 +54,18 @@ test("countBy counts values by key", () => {
 test("countBy handles empty values", () => {
   const counts = countBy([], event => event.song_id);
   assert.deepEqual(counts, {});
+});
+
+
+//user 4 has no listens
+test("User with no data returns empty for all analytics", () => {
+  assert.equal(getMostOftenSongTitle("4"), "");
+  assert.equal(getMostOftenArtist("4"), "");
+  assert.equal(getMostOftenSongFriday("4"), "");
+  assert.equal(getMostListenedSongByTime("4"), "");
+  assert.equal(getMostListenedArtistByTime("4"), "");
+  assert.equal(getMostListenedSongFridayByTime("4"), "");
+  assert.equal(getMostConsecutivelyPlayedSong("4"), "");
+  assert.equal(songListenedEveryDay("4"), "");
+  assert.equal(userTopThreeGenres("4"), "");
 });
