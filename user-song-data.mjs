@@ -56,7 +56,7 @@ export function questionsAndAnswerFns() {
  *                     or an empty string if no data is available.
  *
  * This function analyzes all listening events, counts frequency by song ID,
- * and returns the song with the highest play count an empty string ("") if there's no countable data.
+ * and returns the song with the highest play count or an empty string if there's no countable data.
  */
 export function getMostOftenSongTitle(userID) {
     // get all listen events for the user by calling the helper function
@@ -81,17 +81,20 @@ export function getMostOftenSongTitle(userID) {
  *                     or an empty string if no data is available.
  *
  * This function counts how often each artist appears in the user's listening history
- * and returns teh artist with the highest count or an empty string ("") if there's no countable data.
+ * and returns the artist with the highest count or an empty string if there's no data.
  */
 export function getMostOftenArtist(userID) { 
     const events = getUserListenEvents(userID)
     if (!events.length) return "";
 
     // get the artist  with the highest listen count
-    const mostListenedArtist = getMostBy(events, event => getSong(event.song_id).artist)
+    const mostListenedArtist = getMostBy(events, event => {
+      const song = getSong(event.song_id);
+      return song ? song.artist : "";
+  });
   
-    return mostListenedArtist ? mostListenedArtist: "";
-};
+    return mostListenedArtist || "";
+}
 
 
 /**
@@ -112,32 +115,28 @@ export function getMostOftenSongFriday(userID) {
 
   // check for the 'friday night' window
   const filteredEvents = events.filter(event  => {
-
-    // get the timestamp data for an event
     const date = new Date(event.timestamp);
-
-    // get the day from the date using getDay() method
     const day = date.getDay();
 
     // convert the timestamp to seconds (for total accuracy )
     const seconds = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
 
     // total seconds for Friday 5pm - Midnight = 61200 + 0 + 0 = 61200 seconds.
-    if (day === 5 && seconds >= 61200) return true;
+    if (day === 5 && seconds >= 17 * 3600) return true;
 
     // total seconds for Midnight to Saturday 4am = 14400 + 0 + 0 = 14400 seconds
-    if (day === 6 && seconds < 14400) return true
+    if (day === 6 && seconds < 4 * 3600) return true
 
     return false
   });
 
-    // get the song ID with the highest listen count 
-    const mostListenedSongFridayID = getMostBy(filteredEvents, event => event.song_id);
+    if (!filteredEvents.length) return "";
 
-    // retrieve the song details for song ID
+    // get the song ID & details with the highest listen count 
+    const mostListenedSongFridayID = getMostBy(filteredEvents, event => event.song_id);
     const mostListenedSongFriday = getSong(mostListenedSongFridayID);
 
-  return mostListenedSongFriday  ? `${mostListenedSongFriday .artist} - ${mostListenedSongFriday.title}` : "";
+  return mostListenedSongFriday  ? `${mostListenedSongFriday.artist} - ${mostListenedSongFriday.title}` : "";
 }
 
 
@@ -163,15 +162,13 @@ export function getMostListenedSongByTime(userID) {
     event => {
       // get the song’s duration using the song id from the event data
       const song = getSong(event.song_id);
-      if (song) {
-        return song ? song.duration_seconds : 0
-      }
+      return song ? song.duration_seconds : 0;
     });
 
   // retrieve the song details using song ID and duration
-  const getMostListenedSongByTime = getSong(mostListenedSongID);
+  const MostListenedSongByTime = getSong(mostListenedSongID);
   
-  return getMostListenedSongByTime ? `${getMostListenedSongByTime.artist} - ${getMostListenedSongByTime.title}` : "";
+  return MostListenedSongByTime ? `${MostListenedSongByTime.artist} - ${MostListenedSongByTime.title}` : "";
 
 };
 
@@ -197,12 +194,16 @@ export function getMostListenedArtistByTime(userID) {
     event => {
       // retrieve the artist using the song_id from teh event
       const song = getSong(event.song_id);
-      if (song) {
-        return song ? song.artist : "";
-      }
+      return song ? song.artist : "";
+    },
+    event => {
+      // retreive the total listening time in seconds
+      const song = getSong(event.song_id);
+      return song ? song.duration_seconds : 0;
     }
   );
-  return mostListenedArtist ? mostListenedArtist : "";
+
+  return mostListenedArtist || "";
 }
 
 
@@ -223,21 +224,17 @@ export function getMostListenedSongFridayByTime(userID){
 
     // check for the 'Friday night' window
     const filteredEvents = events.filter(event  => {
-
-      // get the timestamp data for an event
       const date = new Date(event.timestamp);
-
-      // get the day from the date using getDay() method
       const day = date.getDay();
 
       // convert the timestamp to seconds (for total accuracy )
       const seconds = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
 
       // total seconds for Friday 5pm - Midnight = 61200 + 0 + 0 = 61200 seconds.
-      if (day === 5 && seconds >= 61200) return true;
+      if (day === 5 && seconds >= 17 * 3600) return true;
 
       // total seconds for Midnight to Saturday 4am = 14400 + 0 + 0 = 14400 seconds
-      if (day === 6 && seconds < 14400) return true
+      if (day === 6 && seconds < 4 * 3600) return true
 
       return false
     });
@@ -277,18 +274,14 @@ export function getMostConsecutivelyPlayedSong(userID) {
     const events = getUserListenEvents(userID);
     if (!events.length) return "";
 
-    // track the ID of the song currently in the streak
+    // track the ID of the song currently in the streak (by index)
     let currentSongID = events[0].song_id;
 
     // set the variable to 1 because a song is always played at least once
     let currentStreak = 1;
 
-    // set an object to track the longest streak for each song
     const streaks = {};
-
-    //loop through the events
     for (let i = 1; i < events.length; i++) {
-      // get teh song ID played in this event
       const songID = events[i].song_id;
 
       // if the song is the same then the streak continues and the length increases 
@@ -307,11 +300,8 @@ export function getMostConsecutivelyPlayedSong(userID) {
     streaks[currentSongID] = Math.max(streaks[currentSongID] || 0, currentStreak);
   }
 
-// determine which song(s) have the overall longest streak
-// highest streak length found
 let longestStreak = 0;
 
-// array to hold all songs with that streak
 let longestSongs = [];
 
 // find the songs with the overall longest streak
@@ -326,9 +316,7 @@ for (const songID in streaks) {
   }
 }
 
-// create an empty array for the streak results
 let resultArray = [];
-// loop through each id in longestSongs array
 for (const id of longestSongs) {
   // retrieve the song details for the song id
   const song = getSong(id);
@@ -337,9 +325,7 @@ for (const id of longestSongs) {
   }
 }
 
-const result = resultArray.join(", ");
-
-return result;
+return resultArray.join(", ");
 }
 
 
@@ -351,7 +337,7 @@ return result;
  *                     or an empty string ("") if no songs were listened to every day.
  *
  * This function analyzes the user's listening events to determine whether any songs
- * were played at least once **on every distinct day** the user listened to music.
+ * were played at least once on every distinct day the user listened to music.
  */
 export function songListenedEveryDay(userID){
   const events = getUserListenEvents(userID);
@@ -360,12 +346,8 @@ export function songListenedEveryDay(userID){
   // group events by day
   const days = {}
 
-  // loop through all events
   for (const event of events) {
-    // extract the date  e.g YYYY-MM-DD
     const date = new Date(event.timestamp);
-
-    // format the dayKey from date
     const dayKey = date.getFullYear() + "-" +
       String(date.getMonth() + 1).padStart(2, "0") + "-" +
       String(date.getDate()).padStart(2, "0");
@@ -381,12 +363,8 @@ export function songListenedEveryDay(userID){
   }
 
   // create an array of ALL days
-  const dayKeys = [];
-  for (const day in days) {
-    dayKeys.push(day);
-  }
+  const dayKeys = Object.keys(days);
 
-  //return empty if no days
   if (dayKeys.length === 0) return "";
 
   // create a set by taking the first day in the list of days and get all the songs listened to that day.
@@ -410,7 +388,6 @@ export function songListenedEveryDay(userID){
   // at the end, songsEveryDay contains only the songs that were played on every single day
   songsEveryDay = newSongSet;
 
-    // if no songs appear every day, return empty
     if (songsEveryDay.size === 0) return "";
   }
 

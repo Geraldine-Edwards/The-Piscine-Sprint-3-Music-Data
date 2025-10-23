@@ -71,7 +71,7 @@ export function buildResultsTable(results) {
  */
 export function renderAllResults(userID){
     const results = []
-    // loop through every question and answer function
+
     for (const [question, answerFn] of questionsAndAnswerFns()) {
       const answer = answerFn(userID);
       // keep only non-empty answers and push into a results array
@@ -84,7 +84,7 @@ export function renderAllResults(userID){
     const table = buildResultsTable(results);
     renderResult("allResults", table);
     } else {
-      // if the user has no data (results empty), render a short message instead.
+      // if no data, render a short message instead.
       renderResult("allResults", "<p>This user hasn't listened to any songs yet.</p>")
     }
 }

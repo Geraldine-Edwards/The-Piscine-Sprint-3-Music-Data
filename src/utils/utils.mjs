@@ -31,13 +31,9 @@ export function getUserListenEvents(userID) {
 export function countBy(events, getKey, getValue = () => 1) {
     // set an empty object container
     const count = {}; 
-    // loop over each event in events
+    
     for (const event of events) {
-
-        // get the key (e.g. song ID or artist) from the event 
         const key = getKey(event);
-
-        // get the listen value (duration or 1 for count)
         const value = getValue(event);
 
         // if the key (song or artist) has been counted before, add the value to it
@@ -61,7 +57,6 @@ export function getMostListened(counts) {
     // start highestCount with - infinity, the smallest number possible (setting to 0 may cause logic to break)
     let highestCount = -Infinity;
 
-    // loop over each key in counts
     for (const key in counts) {
       // if the count for the current key is greater than highestCount
       if (counts[key] > highestCount) {
