@@ -9,11 +9,19 @@ export const countUsers = () => getUserIDs().length;
 // this prevents Node's test runner from throwing 'window is not defined'.
 if (typeof window !== "undefined") {
   window.onload = function () {
-    // populate the dropdown and attach the event change handler
+    // populate the dropdown
     createUserDropdown();
 
+    // show the default message on page load
+    import("./src/utils/renderers.mjs").then(({ renderResult }) => {
+      renderResult("allResults", "<p>Please select a user to view results.</p>");
+    });
+
+    // attach the event change handler
     setupUserDropdown(function (userID) {
-      renderAllResults(userID);
+      if (userID) {
+        renderAllResults(userID);
+      }
     });
   };
 }
