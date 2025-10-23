@@ -1,5 +1,5 @@
 import { getSong } from "./data.mjs";
-import { getUserListenEvents, getMostBy, } from "./src/utils/utils.mjs";
+import { getUserListenEvents, countBy, getMostBy, } from "./src/utils/utils.mjs";
 
 
 
@@ -41,9 +41,9 @@ export function questionsAndAnswerFns() {
     ["Are there any songs that, on each day the user listened to music, they listened to every day? Which ones(s)",
     songListenedEveryDay
     ],
-    // ["What were the user's top three genres to listen to by number of listens?",
-    // userTopThreeGenres
-    // ]
+    ["What were the user's top three genres to listen to by number of listens?",
+    userTopThreeGenres
+    ]
 ]
 };
 
@@ -427,3 +427,30 @@ export function songListenedEveryDay(userID){
   return resultArray.join(", ");
   
 };
+
+/**
+ * Retrieves the user's top three music genres ranked by number of listens.
+ *
+ * @param {string} userID - The ID of the user whose top genres are being retrieved.
+ * @returns {Array<string>} An array containing up to three genre names, ordered from most listened to least.
+ *
+ * The function analyzes all listening events of the user, counts listens per genre,
+ * and returns the top three genres by listen count.
+ * If the user has fewer than three genres listened to, it returns as many as available.
+ */
+export function userTopThreeGenres(userID) {
+  const events = getUserListenEvents(userID);
+    if (!events.length) return "";
+
+    //count the listens per genre (key = genre, value = counts)
+    const  genreCounts = countBy(events, event => {
+      const song = getSong(event.song_id)
+      return song && song.genre
+    })
+
+    // convert genreCounts to an array, and sort highest to lowest, then get the top 3 genre entries
+    return Object.entries(genreCounts)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([genre]) => genre)
+}
